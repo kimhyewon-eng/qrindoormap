@@ -563,3 +563,36 @@ document.addEventListener('DOMContentLoaded', function() {
     if (attributionControl) {
         bottomRightContainerDiv.appendChild(attributionControl);
     }
+// --- QR 좌표로 지도 이동 및 SVG 마커 표시 ---
+const urlParams = new URLSearchParams(window.location.search);
+const x = parseFloat(urlParams.get("x"));
+const y = parseFloat(urlParams.get("y"));
+
+if (!isNaN(x) && !isNaN(y)) {
+    const coord = [x, y]; // EPSG:3857 좌표계 기준
+
+    // 지도 이동
+    map.getView().setCenter(coord);
+    map.getView().setZoom(23); // 필요 시 줌 조절
+
+    // SVG 마커 추가
+    const markerFeature = new ol.Feature({
+        geometry: new ol.geom.Point(coord),
+    });
+
+    const markerStyle = new ol.style.Style({
+        image: new ol.style.Icon({
+            src: 'resources/location-marker-svgrepo-com.svg',
+            scale: 0.05,
+            anchor: [0.5, 1]
+        })
+    });
+    markerFeature.setStyle(markerStyle);
+
+    const markerLayer = new ol.layer.Vector({
+        source: new ol.source.Vector({
+            features: [markerFeature],
+        }),
+    });
+    map.addLayer(markerLayer);
+}
