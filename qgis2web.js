@@ -1,4 +1,7 @@
 
+proj4.defs("EPSG:5186", "+proj=tmerc +lat_0=38 +lon_0=127.5 +k=1 +x_0=1000000 +y_0=2000000 +ellps=GRS80 +units=m +no_defs");
+ol.proj.proj4.register(proj4);
+
 var map = new ol.Map({
     target: 'map',
     view: new ol.View({
@@ -10,7 +13,6 @@ var map = new ol.Map({
     })
 });
 
-// 마커 좌표 받아오기 (EPSG:5186)
 const urlParams = new URLSearchParams(window.location.search);
 const x = parseFloat(urlParams.get("x"));
 const y = parseFloat(urlParams.get("y"));
