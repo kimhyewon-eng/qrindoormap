@@ -554,3 +554,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (attributionControl) {
         bottomRightContainerDiv.appendChild(attributionControl);
     }
+// QR Code-based map jump (if URL has ?x=...&y=...&zoom=...)
+const urlParams = new URLSearchParams(window.location.search);
+const x = parseFloat(urlParams.get("x"));
+const y = parseFloat(urlParams.get("y"));
+const zoom = parseInt(urlParams.get("zoom"));
+if (!isNaN(x) && !isNaN(y) && !isNaN(zoom)) {
+    const targetCoord = ol.proj.fromLonLat([x, y]);
+    map.getView().setCenter(targetCoord);
+    map.getView().setZoom(zoom);
+}
