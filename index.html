@@ -39,40 +39,17 @@
   <script src="resources/ol-geocoder.js"></script>
   <script src="resources/Autolinker.min.js"></script>
 
+  <script src="layers/_0.js"></script>
   <script src="layers/room_name_1.js"></script>
+  <script src="layers/room_symbols_2.js"></script>
+  <script src="layers/_3.js"></script>
+
+  <script src="styles/_0_style.js"></script>
   <script src="styles/room_name_1_style.js"></script>
+  <script src="styles/room_symbols_2_style.js"></script>
+  <script src="styles/_3_style.js"></script>
 
   <script src="layers/layers.js"></script>
   <script src="resources/qgis2web.js"></script>
-
-<script>
-  const urlParams = new URLSearchParams(window.location.search);
-  const x = parseFloat(urlParams.get("x"));
-  const y = parseFloat(urlParams.get("y"));
-  const zoom = parseInt(urlParams.get("zoom"));
-
-  if (!isNaN(x) && !isNaN(y) && !isNaN(zoom)) {
-    const target = ol.proj.fromLonLat([x, y]); // EPSG:4326 → 3857
-    const interval = setInterval(() => {
-      if (typeof map !== "undefined") {
-        map.getView().setCenter(target);
-        map.getView().setZoom(zoom);
-
-        const marker = document.createElement("div");
-        marker.innerHTML = "📍 QR 위치";
-        marker.style.fontSize = "20px";
-        marker.style.transform = "translate(-50%, -100%)";
-
-        map.addOverlay(new ol.Overlay({
-          position: target,
-          element: marker
-        }));
-
-        clearInterval(interval);
-      }
-    }, 500);
-  }
-</script>
 </body>
-
 </html>

@@ -361,6 +361,79 @@ function onSingleClickFeatures(evt) {
     updatePopup();
 }
 
+function onSingleClickWMS(evt) {
+    if (doHover || sketch) {
+        return;
+    }
+    if (!featuresPopupActive) {
+        popupContent = '';
+    }
+    var coord = evt.coordinate;
+    var viewProjection = map.getView().getProjection();
+    var viewResolution = map.getView().getResolution();
+
+    for (var i = 0; i < wms_layers.length; i++) {
+        if (wms_layers[i][1] && wms_layers[i][0].getVisible()) {
+            var url = wms_layers[i][0].getSource().getFeatureInfoUrl(
+                evt.coordinate, viewResolution, viewProjection, {
+                    'INFO_FORMAT': 'text/html',
+                });
+            if (url) {
+                const wmsTitle = wms_layers[i][0].get('popuplayertitle');
+                var ldsRoller = '<div id="lds-roller"><img class="lds-roller-img" style="height: 25px; width: 25px;"></img></div>';
+
+                popupCoord = coord;
+                popupContent += ldsRoller;
+                updatePopup();
+
+                var timeoutPromise = new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        reject(new Error('Timeout exceeded'));
+                    }, 5000); // (5 second)
+                });
+
+                // Function to try fetch with different option
+                function tryFetch(urls) {
+                    if (urls.length === 0) {
+                        return Promise.reject(new Error('All fetch attempts failed'));
+                    }
+                    return fetch(urls[0])
+                        .then((response) => {
+                            if (response.ok) {
+                                return response.text();
+                            } else {
+                                throw new Error('Fetch failed');
+                            }
+                        })
+                        .catch(() => tryFetch(urls.slice(1))); // Try next URL
+                }
+
+                // List of URLs to try
+                // The first URL is the original, the second is the encoded version, and the third is the proxy
+                const urlsToTry = [
+                    url,
+                    encodeURIComponent(url),
+                    'https://api.allorigins.win/raw?url=' + encodeURIComponent(url)
+                ];
+
+                Promise.race([tryFetch(urlsToTry), timeoutPromise])
+                    .then((html) => {
+                        if (html.indexOf('<table') !== -1) {
+                            popupContent += '<a><b>' + wmsTitle + '</b></a>';
+                            popupContent += html + '<p></p>';
+                            updatePopup();
+                        }
+                    })
+                    .finally(() => {
+                        setTimeout(() => {
+                            var loaderIcon = document.querySelector('#lds-roller');
+                            if (loaderIcon) loaderIcon.remove();
+                        }, 500); // (0.5 second)
+                    });
+            }
+        }
+    }
+}
 
 map.on('singleclick', onSingleClickFeatures);
 map.on('singleclick', onSingleClickWMS);
@@ -490,13 +563,3 @@ document.addEventListener('DOMContentLoaded', function() {
     if (attributionControl) {
         bottomRightContainerDiv.appendChild(attributionControl);
     }
-// QR Code-based map jump (if URL has ?x=...&y=...&zoom=...)
-const urlParams = new URLSearchParams(window.location.search);
-const x = parseFloat(urlParams.get("x"));
-const y = parseFloat(urlParams.get("y"));
-const zoom = parseInt(urlParams.get("zoom"));
-if (!isNaN(x) && !isNaN(y) && !isNaN(zoom)) {
-    const targetCoord = ol.proj.fromLonLat([x, y]);
-    map.getView().setCenter(targetCoord);
-    map.getView().setZoom(zoom);
-}
